@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Задания для Call-центра</title>
+<style type="text/css">
+* {
+	margin: 0;
+	padding: 0;
+}
+
+#wrap {
+	width: 430px;
+	margin: 0 auto;
+	background-color: white;
+}
+
+table {
+	background: #00A287;
+	border: 2px solid #000;
+	border-collapse: collapse;
+	margin: auto;
+	font-size: 20px
+}
+
+td, th {
+	padding: 5px;
+	border: 1px solid #000;
+}
+</style>
+<script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+<script>
+	//поиск введенного номера в БД
+	function findNumberOrder(number){
+		
+		var find = false;
+		var numbersOrders = [];//массив для номеров заказов
+		{{#issuesList}}
+		numbersOrders.push({{number}});//заполнение номерами из БД (исп. данные из шаблона mustache) 
+		{{/issuesList}}
+		//проверка есть ли введенный номер заказа в БД
+		for (var i = 0; i < numbersOrders.length; i++) {
+			if (number == numbersOrders[i]){
+				find = true;
+			}
+		}
+		return find;
+	}
+</script>
+<script>
+	//валидация ввода номера заказа
+	function numValid(number){
+		
+		var valid = false;
+		var notMatched = "Неверный формат введенных данных!\nМожно использовать только цифры";
+		var pattern = /^[0-9]*$/;
+				
+		if (!(pattern.test(number))) {
+			alert(notMatched);
+		}
+		else{
+			valid = true;
+		}
+		return valid;
+	}
+</script>
+<script>
+	//получение информации о заказе
+	function showIssue() {
+
+		var num = $('#orderNumber').val();
+		if (!numValid(num)){
+			return;
+		}
+		else{//если ввод валидный
+			if (findNumberOrder(num)){
+				
+				var dataStr = {
+						number : num
+					};
+				
+				$.ajax({
+					type : "Get",
+					url : "/filter",
+					data : dataStr,
+					success : function(answer) {
+						$('#filter').html(answer);
+					}
+				})
+			}
+			else {
+				alert("Номера заказа "+num+" нет в базе данных");
+				window.location.reload();
+			}
+		}
+	}
+</script>
+</head>
+<body>
+	<div id="wrap">
+		<table>
+			<caption style="font-size: 22px">Список заданий для
+				прозвона клиентов</caption>
+			<tr>
+				<th>номер заказа</th>
+				<th>дата и время добавления задания</th>
+			</tr>
+			{{#issuesList}}
+			<tr>
+				<td>{{number}}</td>
+				<td>{{dateTime}}</td>
+			</tr>
+			{{/issuesList}}
+		</table>
+		<input type="text" id="orderNumber" size="13" placeholder="Введите номер">
+		<button onclick="showIssue()" style="margin: 10px">Найти задание</button>
+		<div id="filter"></div>
+	</div>
+</body>
+</html>
